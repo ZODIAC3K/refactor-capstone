@@ -4,6 +4,9 @@ import dbConnect from "@/lib/mongodb";
 import bcrypt from "bcrypt";
 import { ImageModel } from "@/models/imageSchema";
 import mongoose from "mongoose";
+import { tokenModel } from "@/models/tokenSchema";
+import jwt from "jsonwebtoken";
+import { sendEmail } from "@/utils/utils";
 
 export async function POST(request: NextRequest) {
 	try {
@@ -66,6 +69,8 @@ export async function POST(request: NextRequest) {
 			// Start the transaction
 			session.startTransaction();
 
+			let newUser;
+
 			// Handle profile picture if it exists
 			if (profilePicture && profilePicture instanceof File) {
 				// Create a new user document instance (not saved yet) to get an _id
@@ -84,34 +89,71 @@ export async function POST(request: NextRequest) {
 						{
 							user_id: userId, // Use the _id from the user document instance
 							data: buffer,
-							content_type: profilePicture.type || "image/jpeg",
+							content_type: "profile_picture",
 						},
 					],
 					{ session }
 				);
 
 				// Set the profile_picture field to reference the new image document
-				userData.profile_picture = imageDoc[0]._id;
+				userDoc.profile_picture = imageDoc[0]._id;
 
 				// Now save the user document within the transaction, using the same _id
-				const newUser = await UserModel.create([userDoc.toObject()], {
+				newUser = await UserModel.create([userDoc.toObject()], {
 					session,
 				});
-
-				// Commit the transaction
-				await session.commitTransaction();
-				userResponse = newUser[0].toObject();
-				delete userResponse.password;
 			} else {
 				// If no profile picture, just create the user
-				const newUser = await UserModel.create([userData], { session });
+				newUser = await UserModel.create([userData], { session });
+			}
+
+			userResponse = newUser[0].toObject();
+			delete userResponse.password;
+
+			// Create verification token while still in transaction
+			const verificationToken = new tokenModel({
+				userId: userResponse._id,
+				token: jwt.sign(
+					{ userId: userResponse._id },
+					process.env.JWT_SECRET || "fallback_secret",
+					{ expiresIn: "1h" }
+				),
+			});
+
+			await verificationToken.save({ session }); // Save within the transaction
+
+			// Create verification link
+			const verificationLink = `${process.env.APP_URL}/verify/${userResponse._id}/${verificationToken.token}`;
+
+			// Try to send email before committing transaction
+			try {
+				await sendEmail({
+					email: userResponse.email,
+					subject: "Email Verification",
+					text: `Click the following link to verify your email: ${verificationLink}`,
+					html: `<p>Click <a href="${verificationLink}">here</a> to verify your email</p>`,
+				});
+
+				// Only commit transaction if email is sent successfully
 				await session.commitTransaction();
-				userResponse = newUser[0].toObject();
-				delete userResponse.password;
+				console.log(
+					"Transaction committed: User created and email sent"
+				);
+			} catch (emailError) {
+				// If email fails, abort the transaction
+				await session.abortTransaction();
+				console.error("Failed to send verification email:", emailError);
+
+				return NextResponse.json(
+					{ error: "Failed to send verification email" },
+					{ status: 500 }
+				);
 			}
 		} catch (transactionError: any) {
 			// If an error occurs, abort the transaction
-			await session.abortTransaction();
+			if (session.inTransaction()) {
+				await session.abortTransaction();
+			}
 			console.error("Transaction error:", transactionError);
 
 			return NextResponse.json(

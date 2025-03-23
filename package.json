@@ -20,8 +20,10 @@
         "eslint": "8.44.0",
         "eslint-config-next": "13.4.9",
         "gsap": "^3.12.2",
+        "jsonwebtoken": "^9.0.2",
         "mongoose": "^8.12.1",
         "next": "^15.0.3",
+        "nodemailer": "^6.10.0",
         "react": "18.2.0",
         "react-countup": "^6.4.2",
         "react-dom": "18.2.0",
@@ -45,6 +47,8 @@
     },
     "devDependencies": {
         "@types/bcrypt": "^5.0.2",
+        "@types/jsonwebtoken": "^9.0.9",
+        "@types/nodemailer": "^6.4.17",
         "@types/react-modal-video": "^1.2.0",
         "@types/react-slick": "^0.23.10",
         "prettier": "^3.5.3"

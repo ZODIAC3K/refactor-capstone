@@ -36,7 +36,7 @@ async function dbConnect(): Promise<typeof mongoose> {
 	if (!cached.mongoose?.promise) {
 		const opts = {
 			bufferCommands: false,
-			dbName: "AI_STORE",
+			dbName: process.env.DB_NAME as string,
 		};
 
 		cached.mongoose!.promise = mongoose
