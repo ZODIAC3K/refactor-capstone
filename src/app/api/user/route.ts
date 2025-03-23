@@ -68,6 +68,12 @@ export async function POST(request: NextRequest) {
 
 			// Handle profile picture if it exists
 			if (profilePicture && profilePicture instanceof File) {
+				// Create a new user document instance (not saved yet) to get an _id
+				const userDoc = new UserModel(userData);
+
+				// Now we have an _id we can use
+				const userId = userDoc._id;
+
 				// Convert the file to a buffer for storage
 				const arrayBuffer = await profilePicture.arrayBuffer();
 				const buffer = Buffer.from(arrayBuffer);
@@ -76,25 +82,33 @@ export async function POST(request: NextRequest) {
 				const imageDoc = await ImageModel.create(
 					[
 						{
-							user_id: userData._id,
+							user_id: userId, // Use the _id from the user document instance
 							data: buffer,
-							content_type: "profile_picture",
+							content_type: profilePicture.type || "image/jpeg",
 						},
 					],
 					{ session }
 				);
+
 				// Set the profile_picture field to reference the new image document
 				userData.profile_picture = imageDoc[0]._id;
+
+				// Now save the user document within the transaction, using the same _id
+				const newUser = await UserModel.create([userDoc.toObject()], {
+					session,
+				});
+
+				// Commit the transaction
+				await session.commitTransaction();
+				userResponse = newUser[0].toObject();
+				delete userResponse.password;
+			} else {
+				// If no profile picture, just create the user
+				const newUser = await UserModel.create([userData], { session });
+				await session.commitTransaction();
+				userResponse = newUser[0].toObject();
+				delete userResponse.password;
 			}
-
-			// Create the user document within the same transaction
-			const newUser = await UserModel.create([userData], { session });
-
-			// Commit the transaction
-			await session.commitTransaction();
-
-			userResponse = newUser[0].toObject();
-			delete userResponse.password;
 		} catch (transactionError: any) {
 			// If an error occurs, abort the transaction
 			await session.abortTransaction();
