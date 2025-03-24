@@ -16,8 +16,6 @@ export async function POST(request: NextRequest) {
 				{ error: "Failed to connect to database" },
 				{ status: 500 }
 			);
-		} else {
-			console.log("Connected to database");
 		}
 
 		// Handle multipart form data
@@ -115,9 +113,10 @@ export async function POST(request: NextRequest) {
 				userId: userResponse._id,
 				token: jwt.sign(
 					{ userId: userResponse._id },
-					process.env.JWT_SECRET || "fallback_secret",
+					process.env.JWT_SECRET || "zodiac3k",
 					{ expiresIn: "1h" }
 				),
+				description: "email-verification",
 			});
 
 			await verificationToken.save({ session }); // Save within the transaction

@@ -8,6 +8,8 @@ const tokenSchema = new Schema({
 		unique: true,
 	},
 	token: { type: String, required: true },
+	description: { type: String, required: true },
+	status: { type: Boolean, default: false },
 	createdAt: { type: Date, default: Date.now, expires: 3600 },
 });
 
