@@ -15,29 +15,30 @@ const CreatorSchema = new Schema(
 
 		bio: {
 			type: String,
-			default: null,
+			default: "",
 		},
 
 		quote: {
 			type: String,
-			default: null,
+			default: "",
 		},
 
 		creatorProfilePicture: {
 			type: Schema.Types.ObjectId,
 			ref: "ImageDetail",
-			default: null,
+			default: "",
 		},
 
 		creatorCoverImage: {
 			type: Schema.Types.ObjectId,
 			ref: "ImageDetail",
-			default: null,
+			default: "",
 		},
 
 		socialLinks: {
 			type: Map,
 			of: String,
+			default: {},
 		},
 
 		products: [
