@@ -36,43 +36,31 @@ export async function sendEmail({
 	html,
 }: EmailOptions): Promise<void> {
 	try {
-		console.log("Email config:", {
-			host: HOST,
-			service: SERVICE,
-			port: Number(EMAIL_PORT),
-			secure: SECURE === "true",
-			auth: {
-				user: MAIL_USERNAME,
-				pass: "****", // Don't log the actual password
+		const response = await fetch("/api/send-email", {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json",
 			},
+			body: JSON.stringify({
+				email,
+				subject,
+				text,
+				html,
+			}),
 		});
 
-		const transporter = nodemailer.createTransport({
-			host: HOST,
-			service: SERVICE,
-			port: Number(EMAIL_PORT),
-			secure: SECURE === "true",
-			auth: {
-				user: MAIL_USERNAME,
-				pass: MAIL_PASSWORD,
-			},
-		});
+		if (!response.ok) {
+			const error = await response.json();
+			throw new Error(error.error || "Failed to send email");
+		}
 
-		const info = await transporter.sendMail({
-			from: MAIL_USERNAME,
-			to: email,
-			subject: subject,
-			text: text,
-			html: html,
-		});
-
-		console.log("Email sent successfully", info.messageId);
+		const result = await response.json();
+		console.log("Email sent successfully", result.messageId);
 	} catch (error) {
 		console.log("Email not sent!");
 		console.error(error);
 
-		// During development, don't throw the error to prevent transaction failures
-		if (process.env.APP_ENV === "production") {
+		if (process.env.NEXT_PUBLIC_APP_ENV === "production") {
 			throw error;
 		}
 	}

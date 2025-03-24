@@ -6,8 +6,9 @@ import { ImageModel } from "@/models/imageSchema";
 import mongoose from "mongoose";
 import { tokenModel } from "@/models/tokenSchema";
 import jwt from "jsonwebtoken";
-import { sendEmail } from "@/utils/utils";
+import { sendEmail } from "@/lib/emailService";
 import AuthModel from "@/models/authSchema";
+
 export async function POST(request: NextRequest) {
 	try {
 		const db = await dbConnect();
@@ -200,7 +201,6 @@ export async function GET(request: NextRequest) {
 			);
 		}
 
-		// Get token from cookies
 		const accessToken = request.cookies.get("accessToken")?.value;
 		const refreshToken = request.cookies.get("refreshToken")?.value;
 
@@ -211,12 +211,11 @@ export async function GET(request: NextRequest) {
 			);
 		}
 
-		// Start transaction
 		const session = await db.startSession();
 		session.startTransaction();
 
 		try {
-			// First find the auth record using the token
+			// Find auth record
 			const auth = await AuthModel.findOne({
 				accessToken,
 				refreshToken,
@@ -230,9 +229,10 @@ export async function GET(request: NextRequest) {
 				);
 			}
 
-			// Then find the user using the userId from auth
-			const user = await UserModel.findById(auth.userId)
-				.select("-password") // Exclude password from response
+			// Find user and populate all references
+			let user = await UserModel.findById(auth.userId)
+				.select("-password")
+				.populate("savedAddress")
 				.session(session);
 
 			if (!user) {
@@ -243,16 +243,13 @@ export async function GET(request: NextRequest) {
 				);
 			}
 
-			// If everything is successful, commit the transaction
 			await session.commitTransaction();
 
 			return NextResponse.json(user, { status: 200 });
 		} catch (error) {
-			// If any error occurs, abort the transaction
 			await session.abortTransaction();
 			throw error;
 		} finally {
-			// End the session
 			session.endSession();
 		}
 	} catch (error: any) {

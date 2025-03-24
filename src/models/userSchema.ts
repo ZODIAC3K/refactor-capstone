@@ -58,8 +58,13 @@ const userDetailSchema = new Schema({
 	},
 	created_at: { type: Date, default: Date.now },
 	modified_at: { type: Date, default: Date.now },
-	coupon_used: [{ type: Schema.Types.ObjectId, ref: "Coupon" }],
-	savedAddress: [{ type: Schema.Types.ObjectId, ref: "Address" }],
+	coupon_used: [{ type: Schema.Types.ObjectId, ref: "couponSchema" }],
+	savedAddress: [
+		{
+			type: Schema.Types.ObjectId,
+			ref: "addressschema", // This matches your AddressModel name
+		},
+	],
 });
 
 // Prevent model recompilation in development due to Next.js hot reloading
