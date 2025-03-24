@@ -189,3 +189,337 @@ export async function POST(request: NextRequest) {
 		);
 	}
 }
+
+export async function GET(request: NextRequest) {
+	try {
+		const db = await dbConnect();
+		if (!db) {
+			return NextResponse.json(
+				{ error: "Failed to connect to database" },
+				{ status: 500 }
+			);
+		}
+
+		// Get token from cookies
+		const accessToken = request.cookies.get("accessToken")?.value;
+		const refreshToken = request.cookies.get("refreshToken")?.value;
+
+		if (!accessToken && !refreshToken) {
+			return NextResponse.json(
+				{ error: "No access token provided" },
+				{ status: 401 }
+			);
+		}
+
+		// Start transaction
+		const session = await db.startSession();
+		session.startTransaction();
+
+		try {
+			// First find the auth record using the token
+			const auth = await AuthModel.findOne({
+				accessToken,
+				refreshToken,
+			}).session(session);
+
+			if (!auth) {
+				await session.abortTransaction();
+				return NextResponse.json(
+					{ error: "Invalid token" },
+					{ status: 401 }
+				);
+			}
+
+			// Then find the user using the userId from auth
+			const user = await UserModel.findById(auth.userId)
+				.select("-password") // Exclude password from response
+				.session(session);
+
+			if (!user) {
+				await session.abortTransaction();
+				return NextResponse.json(
+					{ error: "User not found" },
+					{ status: 404 }
+				);
+			}
+
+			// If everything is successful, commit the transaction
+			await session.commitTransaction();
+
+			return NextResponse.json(user, { status: 200 });
+		} catch (error) {
+			// If any error occurs, abort the transaction
+			await session.abortTransaction();
+			throw error;
+		} finally {
+			// End the session
+			session.endSession();
+		}
+	} catch (error: any) {
+		console.error("Error fetching user:", error);
+		return NextResponse.json(
+			{ error: error.message || "Failed to fetch user" },
+			{ status: 500 }
+		);
+	}
+}
+
+export async function PATCH(request: NextRequest) {
+	try {
+		const db = await dbConnect();
+		if (!db) {
+			return NextResponse.json(
+				{ error: "Failed to connect to database" },
+				{ status: 500 }
+			);
+		}
+
+		const session = await db.startSession();
+		session.startTransaction();
+
+		try {
+			const accessToken = request.cookies.get("accessToken")?.value;
+			const refreshToken = request.cookies.get("refreshToken")?.value;
+
+			if (!accessToken && !refreshToken) {
+				await session.abortTransaction();
+				return NextResponse.json(
+					{ error: "No access token provided" },
+					{ status: 401 }
+				);
+			}
+
+			const auth = await AuthModel.findOne({
+				accessToken,
+				refreshToken,
+			}).session(session);
+
+			if (!auth) {
+				await session.abortTransaction();
+				return NextResponse.json(
+					{ error: "Invalid token" },
+					{ status: 401 }
+				);
+			}
+
+			const user = await UserModel.findById(auth.userId).session(session);
+
+			if (!user) {
+				await session.abortTransaction();
+				return NextResponse.json(
+					{ error: "User not found" },
+					{ status: 404 }
+				);
+			}
+
+			const formData = await request.formData();
+			const updates: any = {};
+
+			// Handle basic fields
+			if (formData.has("fname")) updates.fname = formData.get("fname");
+			if (formData.has("lname")) updates.lname = formData.get("lname");
+			if (formData.has("phone")) updates.phone = formData.get("phone");
+
+			// Handle password update
+			if (
+				formData.has("currentPassword") &&
+				formData.has("newPassword")
+			) {
+				const currentPassword = formData.get(
+					"currentPassword"
+				) as string;
+				const newPassword = formData.get("newPassword") as string;
+
+				const isPasswordValid = await bcrypt.compare(
+					currentPassword,
+					user.password
+				);
+				if (!isPasswordValid) {
+					await session.abortTransaction();
+					return NextResponse.json(
+						{ error: "Current password is incorrect" },
+						{ status: 400 }
+					);
+				}
+
+				if (newPassword.length < 8) {
+					await session.abortTransaction();
+					return NextResponse.json(
+						{
+							error: "New password must be at least 8 characters long",
+						},
+						{ status: 400 }
+					);
+				}
+				const hashedPassword = await bcrypt.hash(
+					newPassword,
+					Number(process.env.SALT)
+				);
+				updates.password = hashedPassword;
+			} else if (
+				formData.has("newPassword") &&
+				!formData.has("currentPassword")
+			) {
+				await session.abortTransaction();
+				return NextResponse.json(
+					{
+						error: "Current password is required to update password",
+					},
+					{ status: 400 }
+				);
+			}
+
+			// Update basic fields and password if provided
+			if (Object.keys(updates).length > 0) {
+				Object.assign(user, updates);
+			}
+
+			// Handle profile picture update
+			if (formData.has("profile_picture")) {
+				const profile_picture = formData.get("profile_picture") as File;
+
+				if (profile_picture.size > 0) {
+					// Add check to ensure valid file
+					const bytes = await profile_picture.arrayBuffer();
+					const buffer = Buffer.from(bytes);
+
+					// Delete old profile picture if exists
+					if (user.profile_picture) {
+						await ImageModel.findByIdAndDelete(
+							user.profile_picture
+						).session(session);
+					}
+
+					// Create new image document
+					const imageDoc = await ImageModel.create(
+						[
+							{
+								user_id: user._id,
+								data: buffer,
+								content_type: "profile_picture",
+							},
+						],
+						{ session }
+					);
+
+					user.profile_picture = imageDoc[0]._id;
+				}
+			}
+
+			// Save user if there were any updates
+			if (
+				Object.keys(updates).length > 0 ||
+				formData.has("profile_picture")
+			) {
+				await user.save({ session });
+			}
+
+			await session.commitTransaction();
+
+			// Return updated user without sensitive information
+			const updatedUser = user.toObject();
+			delete updatedUser.password;
+
+			return NextResponse.json(updatedUser, { status: 200 });
+		} catch (error) {
+			await session.abortTransaction();
+			throw error;
+		} finally {
+			session.endSession();
+		}
+	} catch (error: any) {
+		console.error("Error updating user:", error);
+		return NextResponse.json(
+			{ error: error.message || "Failed to update user" },
+			{ status: 500 }
+		);
+	}
+}
+// as number of collection is increasing, we need to add a new collection for the user details to make sure delete all the data related to the user
+export async function DELETE(request: NextRequest) {
+	try {
+		const db = await dbConnect();
+		if (!db) {
+			return NextResponse.json(
+				{ error: "Failed to connect to database" },
+				{ status: 500 }
+			);
+		}
+
+		const session = await db.startSession();
+		session.startTransaction();
+
+		try {
+			const accessToken = request.cookies.get("accessToken")?.value;
+			const refreshToken = request.cookies.get("refreshToken")?.value;
+
+			if (!accessToken && !refreshToken) {
+				await session.abortTransaction();
+				return NextResponse.json(
+					{ error: "No access token provided" },
+					{ status: 401 }
+				);
+			}
+
+			// Find auth record
+			const auth = await AuthModel.findOne({
+				accessToken,
+				refreshToken,
+			}).session(session);
+
+			if (!auth) {
+				await session.abortTransaction();
+				return NextResponse.json(
+					{ error: "Invalid token" },
+					{ status: 401 }
+				);
+			}
+
+			const userId = auth.userId;
+
+			// Delete all user's images
+			await ImageModel.deleteMany({ user_id: userId }).session(session);
+
+			// Delete all auth records for this user
+			await AuthModel.deleteMany({ userId }).session(session);
+
+			// Delete user
+			const deletedUser =
+				await UserModel.findByIdAndDelete(userId).session(session);
+
+			if (!deletedUser) {
+				await session.abortTransaction();
+				return NextResponse.json(
+					{ error: "User not found" },
+					{ status: 404 }
+				);
+			}
+
+			// Commit the transaction
+			await session.commitTransaction();
+
+			// Clear cookies
+			const response = NextResponse.json(
+				{ message: "User account deleted successfully" },
+				{ status: 200 }
+			);
+
+			// Remove auth cookies
+			response.cookies.delete("accessToken");
+			response.cookies.delete("refreshToken");
+
+			return response;
+		} catch (error) {
+			await session.abortTransaction();
+			throw error;
+		} finally {
+			session.endSession();
+		}
+	} catch (error: any) {
+		console.error("Error deleting user:", error);
+		return NextResponse.json(
+			{ error: error.message || "Failed to delete user" },
+			{ status: 500 }
+		);
+	}
+}

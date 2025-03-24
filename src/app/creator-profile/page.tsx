@@ -1,58 +1,71 @@
-import { Metadata } from 'next'
-import Wrapper from '@/layout/wrapper'
-import Header from '@/layout/header/header'
-import Footer from '@/layout/footer/footer'
-import BreadcrumbArea from '../components/breadcrumb/breadcrumb-area'
-import brd_bg from '@/assets/img/bg/breadcrumb_bg01.jpg'
-import brd_img from '@/assets/img/team/breadcrumb_team.png'
-import TeamInfoArea from '../components/team/team-info-area'
-import TeamDetailsArea from '../components/team/team-details-area'
-import VideoArea from '../components/video/video-area'
-import TeamArea from '../components/team/team-area'
-import BrandArea from '../components/brand/brand-area'
+"use client";
 
-export const metadata: Metadata = {
-    title: 'Team Details Page'
-}
+import { Metadata } from "next";
+import { useEffect, useState } from "react";
+import Wrapper from "@/layout/wrapper";
+import Header from "@/layout/header/header";
+import Footer from "@/layout/footer/footer";
+import BreadcrumbArea from "../components/breadcrumb/breadcrumb-area";
+import brd_bg from "@/assets/img/bg/breadcrumb_bg01.jpg";
+import brd_img from "@/assets/img/team/breadcrumb_team.png";
+import TeamDetailsArea from "../components/team/team-details-area";
+import TeamArea from "../components/team/team-area";
+import BrandArea from "../components/brand/brand-area";
 
-export default function TeamDetailsPage() {
-    return (
-        <Wrapper>
-            {/* header start */}
-            <Header />
-            {/* header end */}
+// We can't use export const metadata with client components
+// So we'll need to handle metadata differently
 
-            {/* main area start */}
-            <main className='main--area'>
-                {/* breadcrumb area start */}
-                <BreadcrumbArea title='Harsh Deepanshu' subtitle='CREATOR PROFILE' bg={brd_bg} brd_img={brd_img} />
+export default function CreatorProfilePage() {
+	const [userName, setUserName] = useState("Creator Profile");
 
-                {/* breadcrumb area end */}
+	useEffect(() => {
+		// Read user data from localStorage
+		const userJson = localStorage.getItem("user");
+		if (userJson) {
+			try {
+				const userData = JSON.parse(userJson);
+				if (userData && userData.name) {
+					setUserName(userData.name);
+				}
+			} catch (error) {
+				console.error("Error parsing user data:", error);
+			}
+		}
+	}, []);
 
-                {/* team info start */}
-                {/* <TeamInfoArea /> */}
-                {/* team info end */}
+	return (
+		<Wrapper>
+			{/* header start */}
+			<Header />
+			{/* header end */}
 
-                {/* team details area start */}
-                <TeamDetailsArea />
-                {/* team details area end */}
+			{/* main area start */}
+			<main className="main--area">
+				{/* breadcrumb area start */}
+				<BreadcrumbArea
+					title={userName}
+					subtitle="CREATOR PROFILE"
+					bg={brd_bg}
+					brd_img={brd_img}
+				/>
+				{/* breadcrumb area end */}
 
-                {/* video area start */}
-                {/* <VideoArea /> */}
-                {/* video area end */}
+				{/* team details area start */}
+				<TeamDetailsArea />
+				{/* team details area end */}
 
-                {/* team area start */}
-                <TeamArea />
-                {/* team area end */}
+				{/* team area start */}
+				<TeamArea />
+				{/* team area end */}
 
-                {/*  */}
-                <BrandArea />
-            </main>
-            {/* main area end */}
+				{/*  */}
+				<BrandArea />
+			</main>
+			{/* main area end */}
 
-            {/* footer start */}
-            <Footer />
-            {/* footer end */}
-        </Wrapper>
-    )
+			{/* footer start */}
+			<Footer />
+			{/* footer end */}
+		</Wrapper>
+	);
 }
