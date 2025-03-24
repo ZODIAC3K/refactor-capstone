@@ -7,13 +7,20 @@ import mongoose from "mongoose";
 import { tokenModel } from "@/models/tokenSchema";
 import jwt from "jsonwebtoken";
 import { sendEmail } from "@/utils/utils";
-
+import AuthModel from "@/models/authSchema";
 export async function POST(request: NextRequest) {
 	try {
 		const db = await dbConnect();
 		if (!db) {
 			return NextResponse.json(
 				{ error: "Failed to connect to database" },
+				{ status: 500 }
+			);
+		}
+
+		if (!process.env.SALT) {
+			return NextResponse.json(
+				{ error: "SALT is not defined" },
 				{ status: 500 }
 			);
 		}
@@ -48,7 +55,10 @@ export async function POST(request: NextRequest) {
 			);
 		}
 
-		const hashedPassword = await bcrypt.hash(password, 10);
+		const hashedPassword = await bcrypt.hash(
+			password,
+			Number(process.env.SALT)
+		);
 
 		// Create user data object
 		const userData: any = {
