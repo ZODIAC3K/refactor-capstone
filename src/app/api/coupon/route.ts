@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import CouponDetails from "@/models/couponSchema";
+import couponModal from "@/models/couponSchema";
 import dbConnect from "@/lib/mongodb";
 
 // Helper function to check missing fields
@@ -53,14 +53,14 @@ export async function POST(request: NextRequest) {
 				{ status: 400 }
 			);
 		}
-		const coupon_code_exist = await CouponDetails.findOne({ code });
+		const coupon_code_exist = await couponModal.findOne({ code });
 		if (coupon_code_exist) {
 			return NextResponse.json(
 				{ error: "Coupon code already exists" },
 				{ status: 400 }
 			);
 		}
-		const coupon = await CouponDetails.create({
+		const coupon = await couponModal.create({
 			discount,
 			title,
 			description,
@@ -112,7 +112,7 @@ export async function GET(request: NextRequest) {
 				{ status: 500 }
 			);
 		}
-		const coupons = await CouponDetails.find();
+		const coupons = await couponModal.find();
 		return NextResponse.json({ coupons }, { status: 200 });
 	} catch (error: any) {
 		console.error("Error creating coupon:", error);
@@ -166,10 +166,12 @@ export async function PATCH(request: NextRequest) {
 			}
 			// Check if code exists and is different from current coupon's code
 			if (code) {
-				const existingCoupon = await CouponDetails.findOne({
-					code: code,
-					_id: { $ne: coupon_id }, // Exclude current coupon from check
-				}).session(session);
+				const existingCoupon = await couponModal
+					.findOne({
+						code: code,
+						_id: { $ne: coupon_id }, // Exclude current coupon from check
+					})
+					.session(session);
 
 				if (existingCoupon) {
 					await session.abortTransaction();
@@ -184,7 +186,7 @@ export async function PATCH(request: NextRequest) {
 			}
 
 			// If code is unique or unchanged, proceed with update
-			const coupon = await CouponDetails.findByIdAndUpdate(
+			const coupon = await couponModal.findByIdAndUpdate(
 				{ _id: coupon_id },
 				{
 					discount,
@@ -279,7 +281,7 @@ export async function DELETE(request: NextRequest) {
 				{ status: 400 }
 			);
 		}
-		const coupon = await CouponDetails.findByIdAndDelete(coupon_id);
+		const coupon = await couponModal.findByIdAndDelete(coupon_id);
 		if (!coupon) {
 			return NextResponse.json(
 				{ error: "Coupon not found" },

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import dbConnect from "@/lib/mongodb";
-import CouponDetails from "@/models/couponSchema";
+import couponModal from "@/models/couponSchema";
 
 export async function POST(request: NextRequest) {
 	try {
@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
 				{ status: 400 }
 			);
 		}
-		const coupon = await CouponDetails.findOne({ code: coupon_code });
+		const coupon = await couponModal.findOne({ code: coupon_code });
 		if (!coupon) {
 			return NextResponse.json(
 				{ error: "Coupon code is invalid" },

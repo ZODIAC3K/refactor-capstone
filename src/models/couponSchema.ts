@@ -13,6 +13,6 @@ const couponSchema = new Schema(
 	}
 );
 
-const CouponDetails = models.Coupon || model("Coupon", couponSchema);
+const couponModal = models.couponSchema || model("couponSchema", couponSchema);
 
-export default CouponDetails;
+export default couponModal;
