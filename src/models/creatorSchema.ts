@@ -28,12 +28,12 @@ const CreatorSchema = new Schema(
 			ref: "ImageDetail",
 			default: "",
 		},
-
-		creatorCoverImage: {
-			type: Schema.Types.ObjectId,
-			ref: "ImageDetail",
-			default: "",
-		},
+		// TODO: add cover image -- For now we are not using it
+		// creatorCoverImage: {
+		// 	type: Schema.Types.ObjectId,
+		// 	ref: "ImageDetail",
+		// 	default: "",
+		// },
 
 		socialLinks: {
 			type: Map,

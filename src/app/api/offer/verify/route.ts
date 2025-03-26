@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import dbConnect from "@/lib/mongodb";
 import offerModal from "@/models/offerSchema";
-// import productModal from "@/models/productSchema";
+import productModel from "@/models/productSchema";
 
 export async function POST(request: NextRequest) {
 	try {
@@ -19,6 +19,9 @@ export async function POST(request: NextRequest) {
 				{ status: 400 }
 			);
 		}
+
+		// TODO: Uncomment this when productModal is created
+
 		if (!product_id) {
 			return NextResponse.json(
 				{ error: "Product ID is required" },
@@ -26,14 +29,13 @@ export async function POST(request: NextRequest) {
 			);
 		}
 
-		// TODO: Uncomment this when productModal is created
-		// const product = await productModal.findById(product_id);
-		// if (!product) {
-		// 	return NextResponse.json(
-		// 		{ error: "Product not found" },
-		// 		{ status: 400 }
-		// 	);
-		// }
+		const product = await productModel.findById(product_id);
+		if (!product) {
+			return NextResponse.json(
+				{ error: "Product not found" },
+				{ status: 400 }
+			);
+		}
 
 		const offer = await offerModal.findOne({ code: offer_code });
 		if (!offer) {
