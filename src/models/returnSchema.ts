@@ -9,7 +9,7 @@ const returnSchema = new Schema(
 		},
 		user_id: {
 			type: Schema.Types.ObjectId,
-			ref: "User",
+			ref: "UserDetail",
 			required: true,
 		},
 		status: {

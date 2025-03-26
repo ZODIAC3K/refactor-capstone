@@ -1,7 +1,7 @@
 import { Schema, model, models } from "mongoose";
 
 const transactionSchema = new Schema({
-	user_id: { type: Schema.Types.ObjectId, ref: "User" },
+	user_id: { type: Schema.Types.ObjectId, ref: "UserDetail" },
 	order_id: { type: Schema.Types.ObjectId, ref: "Order" },
 	razorpay_payment_id: { String },
 	razorpay_order_id: { String },

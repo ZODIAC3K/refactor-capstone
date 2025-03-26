@@ -2,7 +2,7 @@ import { Schema, model, models } from "mongoose";
 
 const orderSchema = new Schema(
 	{
-		user_id: { type: Schema.Types.ObjectId, ref: "User" },
+		user_id: { type: Schema.Types.ObjectId, ref: "UserDetail" },
 		status: { type: String, default: "Processing" }, // [Placed, Shipped, Delivered, Cancelled, Failed] (Admin) ==> if Cancelled then refund the amount using razorpay.
 		product_ordered: [{ type: Schema.Types.ObjectId, ref: "Product" }],
 		size_ordered: [String], // size of the product.

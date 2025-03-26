@@ -6,7 +6,11 @@ const authSchema = new Schema(
 		accessTokenExpiry: { type: Date, required: true },
 		refreshToken: { type: String, required: true },
 		refreshTokenExpiry: { type: Date, required: true },
-		userId: { type: Schema.Types.ObjectId, ref: "User", required: true },
+		userId: {
+			type: Schema.Types.ObjectId,
+			ref: "UserDetail",
+			required: true,
+		},
 		description: { type: String, required: true, default: "email-login" },
 	},
 	{
