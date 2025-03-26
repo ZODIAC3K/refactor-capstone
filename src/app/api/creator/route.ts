@@ -4,7 +4,7 @@ import mongoose from "mongoose";
 import AuthModel from "@/models/authSchema";
 import { CreatorModel } from "@/models/creatorSchema";
 import { ImageModel } from "@/models/imageSchema";
-import { UserModel } from "@/models/userSchema";
+import UserModel from "@/models/userSchema";
 import productModel from "@/models/productSchema";
 import ShaderModel from "@/models/shaderSchema";
 

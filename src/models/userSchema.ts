@@ -70,4 +70,4 @@ const userDetailSchema = new Schema({
 // Prevent model recompilation in development due to Next.js hot reloading
 const UserModel = models.UserDetail || model("UserDetail", userDetailSchema);
 
-export { UserModel, userDetailSchema };
+export default UserModel;

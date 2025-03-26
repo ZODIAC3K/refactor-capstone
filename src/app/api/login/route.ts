@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { UserModel } from "@/models/userSchema";
+import UserModel from "@/models/userSchema";
 import dbConnect from "@/lib/mongodb";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";

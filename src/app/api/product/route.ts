@@ -6,7 +6,7 @@ import mongoose from "mongoose";
 import AuthModel from "@/models/authSchema";
 import { CreatorModel } from "@/models/creatorSchema";
 import ShaderModel from "@/models/shaderSchema";
-import { UserModel } from "@/models/userSchema";
+import UserModel from "@/models/userSchema";
 import CategoryModel from "@/models/categorySchema";
 import objectModel from "@/models/objectSchema";
 
