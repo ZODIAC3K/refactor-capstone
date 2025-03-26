@@ -248,58 +248,68 @@ export async function POST(request: NextRequest) {
 // - Cookie: accessToken=xxx; refreshToken=yyy
 
 // FormData:
-// - title: "Cool 3D Model"
-// - description: "Amazing 3D model description"
-// - category_id: ["categoryId123", "categoryId456"]
-// - model_id: "modelId123"
-// - shader: (file) shader-image.jpg
+// - title: "Cool T-Shirt EEDFEF"
+// - description: "Awesome T-Shirt"
+// - category_id: "67e2c2efa9e1238a162f5a3c"
+// - model_id: "67e34283d001c2fc0ec7110c"
+// - shader: (file) 366278.jpg
 // - price_amount: "999"
 // - price_currency: "INR"
-// - image: (file) product-image.jpg
+// - image: (file) ai_faishon.jpg
+// - shaderType: "partial-body"
 
 // Success Response (201):
 // {
 //     "success": true,
 //     "message": "Product created successfully",
 //     "data": {
-//         "_id": "66f091a9b511458168a109ca",
-//         "title": "Cool 3D Model",
-//         "description": "Amazing 3D model description",
+//         "_id": "67e34283d001c2fc0ec7110d",
+//         "title": "Cool T-Shirt EEDFEF",
+//         "description": "Awesome T-Shirt",
 //         "category_id": [{
-//             "_id": "66f091a9b511458168a109cb",
-//             "name": "Category Name",
-//             // ... other populated category fields
+//             "_id": "67e2c2efa9e1238a162f5a3c",
+//             "category_name": "T-Shirts"
 //         }],
 //         "model_id": {
-//             "_id": "66f091a9b511458168a109cc",
-//             "name": "Model Name",
-//             "modelUrl": "https://...",
-//             // ... other populated model fields
+//             "_id": "67e34283d001c2fc0ec7110c",
+//             "name": "T-Shirt Model",
+//             "modelUrl": "https://zodiac3k-bucket.s3.amazonaws.com/models/t-shirt.glb",
+//             "position": { "x": 0, "y": 0, "z": 0 },
+//             "rotation": { "x": 0, "y": 0, "z": 0 },
+//             "scale": { "x": 1, "y": 1, "z": 1 }
 //         },
 //         "creator_id": {
-//             "_id": "66f091a9b511458168a109cd",
-//             "user_id": "66f091a9b511458168a109ce",
+//             "_id": "67e34283d001c2fc0ec7110e",
+//             "userId": "67e34283d001c2fc0ec7110f",
 //             "name": "Creator Name",
-//             // ... other populated creator fields
+//             "bio": "Creative designer",
+//             "quote": "Design is life",
+//             "royaltyPercentage": 30
 //         },
 //         "shader_id": {
-//             "_id": "66f091a9b511458168a109cf",
-//             "user_id": "66f091a9b511458168a109cd",
-//             "content_type": "image/jpeg",
-//             "data": <Buffer ...>
+//             "_id": "67e34283d001c2fc0ec71111",
+//             "shaderType": "partial-body",
+//             "shaderImage": "67e34283d001c2fc0ec71112",
+//             "product_id": "67e34283d001c2fc0ec7110d",
+//             "mapping": {
+//                 "scale": { "x": 1, "y": 1 },
+//                 "offset": { "x": 0, "y": 0 },
+//                 "rotation": 0
+//             }
 //         },
 //         "price": {
 //             "amount": 999,
 //             "currency": "INR"
 //         },
 //         "image_id": {
-//             "_id": "66f091a9b511458168a109cg",
-//             "user_id": "66f091a9b511458168a109cd",
+//             "_id": "67e34283d001c2fc0ec71113",
+//             "user_id": "67e34283d001c2fc0ec7110e",
 //             "content_type": "image/jpeg",
-//             "data": <Buffer ...>
+//             "data": "<Buffer ...>"
 //         },
-//         "created_at": "2024-03-25T12:00:00.000Z",
-//         "updated_at": "2024-03-25T12:00:00.000Z"
+//         "sales_count": 0,
+//         "created_at": "2024-03-12T10:00:00.000Z",
+//         "updated_at": "2024-03-12T10:00:00.000Z"
 //     }
 // }
 
@@ -414,51 +424,68 @@ export async function GET(request: NextRequest) {
 
 // 1. Get Single Product
 // GET http://localhost:3000/api/product?id=66f091a9b511458168a109ca
-// Response:
+
+// Success Response (200):
 // {
 //     "success": true,
 //     "data": {
 //         "_id": "66f091a9b511458168a109ca",
-//         "title": "Cool 3D Model",
-//         "description": "Amazing 3D model description",
+//         "title": "Cool T-Shirt EEDFEF",
+//         "description": "Awesome T-Shirt",
 //         "category_id": [{
-//             "_id": "66f091a9b511458168a109cb",
-//             "name": "Category Name"
+//             "_id": "67e2c2efa9e1238a162f5a3c",
+//             "category_name": "T-Shirts"
 //         }],
 //         "model_id": {
-//             "_id": "66f091a9b511458168a109cc",
-//             "name": "Model Name",
-//             "modelUrl": "https://..."
+//             "_id": "67e34283d001c2fc0ec7110c",
+//             "name": "T-Shirt Model",
+//             "modelUrl": "https://zodiac3k-bucket.s3.amazonaws.com/models/t-shirt.glb",
+//             "position": { "x": 0, "y": 0, "z": 0 },
+//             "rotation": { "x": 0, "y": 0, "z": 0 },
+//             "scale": { "x": 1, "y": 1, "z": 1 }
 //         },
 //         "creator_id": {
-//             "_id": "66f091a9b511458168a109cd",
-//             "name": "Creator Name"
+//             "_id": "67e34283d001c2fc0ec7110d",
+//             "name": "Creator Name",
+//             "bio": "Creative designer",
+//             "quote": "Design is life"
 //         },
 //         "shader_id": {
-//             "_id": "66f091a9b511458168a109cf",
-//             "content_type": "image/jpeg",
-//             "data": <Buffer ...>
+//             "_id": "67e34283d001c2fc0ec7110e",
+//             "shaderType": "partial-body",
+//             "shaderImage": "67e34283d001c2fc0ec7110f",
+//             "product_id": "66f091a9b511458168a109ca"
 //         },
 //         "image_id": {
-//             "_id": "66f091a9b511458168a109cg",
+//             "_id": "67e34283d001c2fc0ec71110",
+//             "user_id": "67e34283d001c2fc0ec71111",
 //             "content_type": "image/jpeg",
-//             "data": <Buffer ...>
+//             "data": "<Buffer ...>"
 //         },
 //         "price": {
 //             "amount": 999,
 //             "currency": "INR"
-//         }
+//         },
+//         "sales_count": 0,
+//         "created_at": "2024-03-12T10:00:00.000Z",
+//         "updated_at": "2024-03-12T10:00:00.000Z"
 //     }
 // }
 
 // 2. Get All Products (with pagination and filters)
 // GET http://localhost:3000/api/product?page=1&limit=10&category=categoryId&creator=creatorId
-// Response:
+
+// Success Response (200):
 // {
 //     "success": true,
 //     "data": {
 //         "products": [
-//             // Array of populated product objects
+//             {
+//                 // Same structure as single product response
+//                 "_id": "66f091a9b511458168a109ca",
+//                 "title": "Cool T-Shirt EEDFEF",
+//                 // ... other fields
+//             }
 //         ],
 //         "pagination": {
 //             "total": 100,
