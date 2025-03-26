@@ -4,7 +4,7 @@ const addressSchema = new Schema(
 	{
 		user_id: {
 			type: Schema.Types.ObjectId,
-			ref: "User",
+			ref: "UserDetail",
 			required: true,
 		},
 		address: {
@@ -21,8 +21,7 @@ const addressSchema = new Schema(
 	}
 );
 
-// Use 'Address' as the model name to match the ref in UserModel
-const AddressModel =
-	models.addressschema || model("addressschema", addressSchema);
+// Changed to match the ref "Address" in userSchema.ts
+const AddressModel = models.Address || model("Address", addressSchema);
 
 export { AddressModel, addressSchema };

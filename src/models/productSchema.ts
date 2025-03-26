@@ -4,15 +4,16 @@ const productDetailsSchema = new Schema(
 	{
 		title: { type: String, required: true, unique: true },
 		description: { type: String, required: true },
-		category: [{ type: Schema.Types.ObjectId, ref: "Category" }],
+		category_id: [{ type: Schema.Types.ObjectId, ref: "Category" }],
 		model_id: { type: Schema.Types.ObjectId, ref: "Object" },
+		image_id: { type: Schema.Types.ObjectId, ref: "ImageDetail" },
 		rating: { type: Number, default: 0 },
-		creator: {
+		creator_id: {
 			type: Schema.Types.ObjectId,
 			ref: "Creator",
 			required: true,
 		},
-		shader: { type: Schema.Types.ObjectId, ref: "Shader" },
+		shader_id: { type: Schema.Types.ObjectId, ref: "Shader" },
 		price: {
 			amount: { type: Number, required: true },
 			currency: {

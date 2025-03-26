@@ -8,6 +8,7 @@ import { tokenModel } from "@/models/tokenSchema";
 import jwt from "jsonwebtoken";
 import { sendEmail } from "@/lib/emailService";
 import AuthModel from "@/models/authSchema";
+import populateAllAttributes from "@/utils/populateData";
 
 export async function POST(request: NextRequest) {
 	try {

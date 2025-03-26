@@ -62,7 +62,7 @@ const userDetailSchema = new Schema({
 	savedAddress: [
 		{
 			type: Schema.Types.ObjectId,
-			ref: "addressschema", // This matches your AddressModel name
+			ref: "addressschema",
 		},
 	],
 });

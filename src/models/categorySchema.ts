@@ -9,6 +9,7 @@ const categorySchema = new Schema(
 	}
 );
 
-const CategoryModel = models.Category || model("Category", categorySchema);
+const CategoryModel =
+	models.categoryschema || model("categoryschema", categorySchema);
 
 export default CategoryModel;

@@ -9,7 +9,7 @@ const shaderSchema = new Schema(
 		},
 		shaderType: {
 			type: String,
-			enum: ["full-body", "partial"],
+			enum: ["full-body", "partial-body"],
 			required: true,
 		},
 		shaderImage: {

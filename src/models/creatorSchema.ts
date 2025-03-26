@@ -11,6 +11,7 @@ const CreatorSchema = new Schema(
 		name: {
 			type: String,
 			required: true,
+			unique: true,
 		},
 
 		bio: {
@@ -26,21 +27,14 @@ const CreatorSchema = new Schema(
 		creatorProfilePicture: {
 			type: Schema.Types.ObjectId,
 			ref: "ImageDetail",
-			default: "",
-		},
-		// TODO: add cover image -- For now we are not using it
-		// creatorCoverImage: {
-		// 	type: Schema.Types.ObjectId,
-		// 	ref: "ImageDetail",
-		// 	default: "",
-		// },
-
-		socialLinks: {
-			type: Map,
-			of: String,
-			default: {},
+			default: null,
 		},
 
+		creatorCoverImage: {
+			type: Schema.Types.ObjectId,
+			ref: "ImageDetail",
+			default: null,
+		},
 		products: [
 			{
 				type: Schema.Types.ObjectId,
@@ -51,7 +45,12 @@ const CreatorSchema = new Schema(
 		totalSales: {
 			type: Number,
 			default: 0,
-		},
+		}, // total sales of all products combined (amount in INR)
+
+		royaltyPercentage: {
+			type: Number,
+			default: 30,
+		}, // 0-100 percentage
 	},
 	{ timestamps: true }
 );
