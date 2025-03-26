@@ -85,12 +85,26 @@ export async function POST(request: NextRequest) {
 
 			// Validate required fields
 			if (!title || !model_id || !shader || !price_amount || !image) {
+				console.log("Missing fields check:");
+				console.log("title:", !!title);
+				console.log("model_id:", !!model_id);
+				console.log("shader:", !!shader);
+				console.log("price_amount:", !!price_amount);
+				console.log("image:", !!image);
+
 				await session.abortTransaction();
 				session.endSession();
 				return Response.json(
 					{
 						success: false,
 						error: "Missing required fields",
+						missing: {
+							title: !title,
+							model_id: !model_id,
+							shader: !shader,
+							price_amount: !price_amount,
+							image: !image,
+						},
 					},
 					{ status: 400 }
 				);
@@ -101,7 +115,10 @@ export async function POST(request: NextRequest) {
 				await session.abortTransaction();
 				session.endSession();
 				return Response.json(
-					{ success: false, error: "Product already exists" },
+					{
+						success: false,
+						error: "Product already exists with this title",
+					},
 					{ status: 400 }
 				);
 			}
@@ -310,10 +327,6 @@ export async function GET(request: NextRequest) {
 				path: "shader_id",
 				model: "shaderSchema",
 			},
-			// {
-			// 	path: "image_id",
-			// 	model: "ImageDetail",
-			// },
 		];
 
 		if (id) {
@@ -324,7 +337,10 @@ export async function GET(request: NextRequest) {
 
 			if (!product) {
 				return NextResponse.json(
-					{ success: false, error: "Product not found" },
+					{
+						success: false,
+						error: "No product found",
+					},
 					{ status: 404 }
 				);
 			}
@@ -356,6 +372,13 @@ export async function GET(request: NextRequest) {
 			.sort({ created_at: -1 })
 			.skip((page - 1) * limit)
 			.limit(limit);
+
+		if (products.length === 0) {
+			return NextResponse.json(
+				{ success: false, error: "No products found" },
+				{ status: 404 }
+			);
+		}
 
 		return NextResponse.json(
 			{
