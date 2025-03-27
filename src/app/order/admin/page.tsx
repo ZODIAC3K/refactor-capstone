@@ -38,10 +38,10 @@ export default function OrderManagementPage() {
 	const [selectedPaymentStatus, setSelectedPaymentStatus] = useState(
 		"All Payment Statuses"
 	);
-	const [showCancelModal, setShowCancelModal] = useState(false);
-	const [showRefundRequestModal, setShowRefundRequestModal] = useState(false);
+	const [showStatusModal, setShowStatusModal] = useState(false);
+	const [showRefundModal, setShowRefundModal] = useState(false);
 	const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
-	const [refundReason, setRefundReason] = useState("");
+	const [refundAmount, setRefundAmount] = useState("");
 	const [currentPage, setCurrentPage] = useState(1);
 	const [filteredOrders, setFilteredOrders] = useState<Order[]>([]);
 	const ordersPerPage = 5;
@@ -160,18 +160,52 @@ export default function OrderManagementPage() {
 	);
 	const totalPages = Math.ceil(filteredOrders.length / ordersPerPage);
 
-	const handleOrderCancel = () => {
+	const handleStatusUpdate = (newStatus: Order["status"]) => {
 		if (selectedOrder) {
 			// In a real app, you would make an API call here
 			const updatedOrders = orders.map((order) => {
 				if (order.id === selectedOrder.id) {
+					return { ...order, status: newStatus };
+				}
+				return order;
+			});
+
+			// Update the state (simulating API response)
+			setOrders(updatedOrders);
+			setShowStatusModal(false);
+		}
+	};
+
+	const handleRefund = () => {
+		if (selectedOrder && refundAmount) {
+			const amount = parseFloat(refundAmount);
+			if (isNaN(amount) || amount <= 0) {
+				alert("Please enter a valid amount");
+				return;
+			}
+
+			if (amount > selectedOrder.total) {
+				alert("Refund amount cannot exceed the order total");
+				return;
+			}
+
+			// In a real app, you would make an API call here
+			const updatedOrders = orders.map((order) => {
+				if (order.id === selectedOrder.id) {
+					const newPaymentStatus: "Refunded" | "Partially Refunded" =
+						amount === selectedOrder.total
+							? "Refunded"
+							: "Partially Refunded";
+
 					return {
 						...order,
-						status: "Refunded",
+						status:
+							amount === selectedOrder.total
+								? "Refunded"
+								: order.status,
 						payment: {
-							...order.payment,
-							status: "Refunded",
-							refundedAmount: order.total,
+							status: newPaymentStatus,
+							refundedAmount: amount,
 						},
 					};
 				}
@@ -179,46 +213,10 @@ export default function OrderManagementPage() {
 			});
 
 			// Update the state (simulating API response)
-			setOrders(updatedOrders as Order[]);
-			setShowCancelModal(false);
+			setOrders(updatedOrders);
+			setRefundAmount("");
+			setShowRefundModal(false);
 		}
-	};
-
-	const handleRefundRequest = () => {
-		if (selectedOrder && refundReason) {
-			if (refundReason.trim().length < 10) {
-				alert(
-					"Please provide a detailed reason for your refund request"
-				);
-				return;
-			}
-
-			// In a real app, you would make an API call here to create a refund request
-			alert(
-				`Refund request submitted for order ${selectedOrder.id}. Our team will review your request shortly.`
-			);
-
-			// Close the modal and reset the form
-			setRefundReason("");
-			setShowRefundRequestModal(false);
-		} else {
-			alert("Please provide a reason for your refund request");
-		}
-	};
-
-	// Function to determine if user can cancel an order
-	const canCancelOrder = (order: Order) => {
-		return order.status === "Processing";
-	};
-
-	// Function to determine if user can request a refund
-	const canRequestRefund = (order: Order) => {
-		return (
-			order.status === "Delivered" &&
-			order.payment.status === "Paid" &&
-			new Date(order.date) >
-				new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
-		); // Within 30 days
 	};
 
 	// CSS classes for status badges
@@ -265,9 +263,9 @@ export default function OrderManagementPage() {
 						</div>
 					</div>
 					<div>
-						<h1 className="h3 m-0">My Orders</h1>
+						<h1 className="h3 m-0">Manage Orders</h1>
 						<p className="text-white-50 m-0">
-							View and manage your order history
+							View and manage customer orders
 						</p>
 					</div>
 				</div>
@@ -339,6 +337,7 @@ export default function OrderManagementPage() {
 						<thead>
 							<tr className="border-bottom border-secondary">
 								<th>Order ID</th>
+								<th>Customer</th>
 								<th>Product</th>
 								<th>Total</th>
 								<th>Date</th>
@@ -355,6 +354,12 @@ export default function OrderManagementPage() {
 										className="border-bottom border-secondary"
 									>
 										<td>{order.id}</td>
+										<td>
+											<div>{order.customer.name}</div>
+											<div className="text-white-50 small">
+												{order.customer.email}
+											</div>
+										</td>
 										<td>{order.product}</td>
 										<td>
 											{currency.symbol}
@@ -388,46 +393,50 @@ export default function OrderManagementPage() {
 											)}
 										</td>
 										<td>
-											{canCancelOrder(order) && (
-												<button
-													onClick={() => {
-														setSelectedOrder(order);
-														setShowCancelModal(
-															true
-														);
-													}}
-													className="btn btn-sm btn-danger mb-1 w-100 d-flex justify-content-center align-items-center"
-												>
-													Cancel Order
-												</button>
+											{order.status !== "Refunded" ? (
+												<div className="d-flex gap-2">
+													<button
+														onClick={() => {
+															setSelectedOrder(
+																order
+															);
+															setShowStatusModal(
+																true
+															);
+														}}
+														className="btn btn-sm btn-dark border-light"
+														aria-label="Update status"
+													>
+														<FaSyncAlt />
+													</button>
+													<button
+														onClick={() => {
+															setSelectedOrder(
+																order
+															);
+															setRefundAmount("");
+															setShowRefundModal(
+																true
+															);
+														}}
+														className="btn btn-sm btn-success"
+														aria-label="Process refund"
+													>
+														<FaRupeeSign />
+													</button>
+												</div>
+											) : (
+												<div className="text-white-50">
+													No actions available
+												</div>
 											)}
-											{canRequestRefund(order) && (
-												<button
-													onClick={() => {
-														setSelectedOrder(order);
-														setRefundReason("");
-														setShowRefundRequestModal(
-															true
-														);
-													}}
-													className="btn btn-sm btn-warning text-dark w-100 d-flex justify-content-center align-items-center"
-												>
-													Request Refund
-												</button>
-											)}
-											{!canCancelOrder(order) &&
-												!canRequestRefund(order) && (
-													<div className="text-white-50 small text-center">
-														No actions available
-													</div>
-												)}
 										</td>
 									</tr>
 								))
 							) : (
 								<tr>
 									<td
-										colSpan={7}
+										colSpan={8}
 										className="text-center py-4 text-white-50"
 									>
 										No orders found matching your criteria
@@ -493,8 +502,8 @@ export default function OrderManagementPage() {
 				</div>
 			</div>
 
-			{/* Cancel Order Confirmation Modal */}
-			{showCancelModal && (
+			{/* Status Update Modal */}
+			{showStatusModal && (
 				<div
 					className="modal fade show d-block"
 					tabIndex={-1}
@@ -504,52 +513,86 @@ export default function OrderManagementPage() {
 					<div className="modal-dialog modal-dialog-centered">
 						<div className="modal-content bg-dark text-white border border-light">
 							<div className="modal-header border-0">
-								<h5 className="modal-title">Cancel Order</h5>
+								<h5 className="modal-title">
+									Update Order Status
+								</h5>
 								<button
 									type="button"
 									className="btn-close btn-close-white"
-									onClick={() => setShowCancelModal(false)}
+									onClick={() => setShowStatusModal(false)}
 								></button>
 							</div>
-							<div className="modal-body">
-								<p>
-									Are you sure you want to cancel this order?
-								</p>
-								<p className="text-danger">
-									This action cannot be undone.
-								</p>
-								<div className="bg-secondary text-white p-3 rounded mb-3">
-									<div className="fw-bold">
-										{selectedOrder?.product}
-									</div>
-									<div>Order #: {selectedOrder?.id}</div>
-									<div>
-										Total: {currency.symbol}
-										{selectedOrder?.total.toFixed(2)}
-									</div>
+							<div className="modal-body pt-0">
+								<div className="list-group list-group-flush bg-dark">
+									<button
+										onClick={() =>
+											handleStatusUpdate("Processing")
+										}
+										className="list-group-item list-group-item-action bg-dark text-white border-secondary py-3"
+									>
+										<div className="d-flex align-items-center">
+											<span className="badge bg-warning">
+												&nbsp;
+											</span>
+											<span className="ms-2">
+												Processing
+											</span>
+										</div>
+									</button>
+									<button
+										onClick={() =>
+											handleStatusUpdate("Shipped")
+										}
+										className="list-group-item list-group-item-action bg-dark text-white border-secondary py-3"
+									>
+										<div className="d-flex align-items-center">
+											<span className="badge bg-info">
+												&nbsp;
+											</span>
+											<span className="ms-2">
+												Shipped
+											</span>
+										</div>
+									</button>
+									<button
+										onClick={() =>
+											handleStatusUpdate("Delivered")
+										}
+										className="list-group-item list-group-item-action bg-dark text-white border-secondary py-3"
+									>
+										<div className="d-flex align-items-center">
+											<span className="badge bg-success">
+												&nbsp;
+											</span>
+											<span className="ms-2">
+												Delivered
+											</span>
+										</div>
+									</button>
+									<button
+										onClick={() =>
+											handleStatusUpdate("Refunded")
+										}
+										className="list-group-item list-group-item-action bg-dark text-white border-secondary py-3 text-danger"
+									>
+										<div className="d-flex align-items-center">
+											<span className="badge bg-danger">
+												&nbsp;
+											</span>
+											<span className="ms-2">
+												Cancel Order
+											</span>
+										</div>
+									</button>
 								</div>
-							</div>
-							<div className="modal-footer border-0">
-								<button
-									className="btn btn-secondary"
-									onClick={() => setShowCancelModal(false)}
-								>
-									Keep Order
-								</button>
-								<button
-									className="btn btn-danger"
-									onClick={handleOrderCancel}
-								>
-									Cancel Order
-								</button>
 							</div>
 						</div>
 					</div>
 				</div>
 			)}
 
-			{/* Refund Request Modal */}
-			{showRefundRequestModal && (
+			{/* Refund Modal */}
+			{showRefundModal && (
 				<div
 					className="modal fade show d-block"
 					tabIndex={-1}
@@ -559,60 +602,56 @@ export default function OrderManagementPage() {
 					<div className="modal-dialog modal-dialog-centered">
 						<div className="modal-content bg-dark text-white border border-light">
 							<div className="modal-header border-0">
-								<h5 className="modal-title">Request Refund</h5>
+								<h5 className="modal-title">Process Refund</h5>
 								<button
 									type="button"
 									className="btn-close btn-close-white"
-									onClick={() =>
-										setShowRefundRequestModal(false)
-									}
+									onClick={() => setShowRefundModal(false)}
 								></button>
 							</div>
 							<div className="modal-body">
-								<div className="bg-secondary text-white p-3 rounded mb-3">
-									<div className="fw-bold">
-										{selectedOrder?.product}
-									</div>
-									<div>Order #: {selectedOrder?.id}</div>
-									<div>
-										Total: {currency.symbol}
-										{selectedOrder?.total.toFixed(2)}
-									</div>
-								</div>
-
 								<div className="mb-3">
 									<label className="form-label text-white">
-										Reason for Refund Request
+										Refund Amount
 									</label>
-									<textarea
-										rows={4}
-										value={refundReason}
-										onChange={(e) =>
-											setRefundReason(e.target.value)
-										}
-										placeholder="Please explain why you're requesting a refund..."
-										className="form-control bg-dark text-white border-secondary"
-									/>
-									<small className="text-white-50">
-										Please provide detailed information to
-										help us process your request quickly.
-									</small>
+									<div className="input-group">
+										<span className="input-group-text bg-dark text-white border-secondary">
+											{currency.symbol}
+										</span>
+										<input
+											type="number"
+											step="0.01"
+											min="0.01"
+											max={selectedOrder?.total}
+											value={refundAmount}
+											onChange={(e) =>
+												setRefundAmount(e.target.value)
+											}
+											placeholder="Enter amount"
+											className="form-control bg-dark text-white border-secondary"
+										/>
+									</div>
+									{selectedOrder && (
+										<small className="text-white-50">
+											Maximum refund amount:{" "}
+											{currency.symbol}
+											{selectedOrder.total.toFixed(2)}
+										</small>
+									)}
 								</div>
 							</div>
 							<div className="modal-footer border-0">
 								<button
 									className="btn btn-secondary"
-									onClick={() =>
-										setShowRefundRequestModal(false)
-									}
+									onClick={() => setShowRefundModal(false)}
 								>
 									Cancel
 								</button>
 								<button
-									className="btn btn-warning text-dark"
-									onClick={handleRefundRequest}
+									className="btn btn-success"
+									onClick={handleRefund}
 								>
-									Submit Request
+									Process Refund
 								</button>
 							</div>
 						</div>
@@ -621,7 +660,7 @@ export default function OrderManagementPage() {
 			)}
 
 			{/* Modal backdrop */}
-			{(showCancelModal || showRefundRequestModal) && (
+			{(showStatusModal || showRefundModal) && (
 				<div className="modal-backdrop fade show"></div>
 			)}
 		</div>
