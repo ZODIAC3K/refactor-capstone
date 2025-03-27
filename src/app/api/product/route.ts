@@ -64,9 +64,9 @@ export async function POST(request: NextRequest) {
 			if (!findCreator) {
 				return NextResponse.json(
 					{ error: "Creator not found" },
-					{ status: 404 }
-				);
-			}
+				{ status: 404 }
+			);
+		}
 
 			const creator_id = findCreator._id;
 
@@ -153,11 +153,11 @@ export async function POST(request: NextRequest) {
 			const [product] = await productModel.create(
 				[
 					{
-						title,
-						description,
+			title,
+			description,
 						category_id: category_id ? category_id.split(",") : [],
-						model_id,
-						creator_id,
+			model_id,
+			creator_id,
 						price: {
 							amount: price_amount,
 							currency: price_currency || "INR",
@@ -212,15 +212,15 @@ export async function POST(request: NextRequest) {
 			await session.commitTransaction();
 			session.endSession();
 
-			return Response.json(
-				{
-					success: true,
-					message: "Product created successfully",
+		return Response.json(
+			{
+				success: true,
+				message: "Product created successfully",
 					data: populatedProduct,
-				},
-				{ status: 201 }
-			);
-		} catch (error) {
+			},
+			{ status: 201 }
+		);
+	} catch (error) {
 			await session.abortTransaction();
 			throw error;
 		} finally {
